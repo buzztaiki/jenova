@@ -9,5 +9,6 @@ repositories {
 }
 
 dependencies {
+    testCompile 'junit:junit:4.10'
     compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
