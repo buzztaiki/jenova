@@ -5,6 +5,8 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -38,7 +40,12 @@ public class AnnotationProcessor extends AbstractProcessor {
             final JCTree.JCCompilationUnit unit = toUnit(elem);
             if (unit == null) continue;
             if (unit.sourcefile.getKind() != JavaFileObject.Kind.SOURCE) continue;
-            System.out.println(unit);
+            unit.accept(new TreeTranslator() {
+                @Override public void visitNewClass(JCTree.JCNewClass tree) {
+                    super.visitNewClass(tree);
+                    System.out.println(tree);
+                }
+            });
         }
         return false;
     }
