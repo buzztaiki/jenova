@@ -96,7 +96,8 @@ public class AnnotationProcessor extends AbstractProcessor {
         TreeMaker maker = TreeMaker.instance(context);
         JavacElements elems = JavacElements.instance(context);
 
-        List<JCTree> members = fn.getClassBody().getMembers();
+        JCTree.JCClassDecl body = fn.getClassBody();
+        List<JCTree> members = body.getMembers();
         JCTree.JCBlock initBlock = (JCTree.JCBlock)(members.get(0));
         JCTree.JCMethodDecl method = maker.MethodDef(
             maker.Modifiers(Flags.PUBLIC),
@@ -111,9 +112,21 @@ public class AnnotationProcessor extends AbstractProcessor {
             List.<JCTree.JCExpression>nil(),
             initBlock,
             null);
-        System.out.println(method);
-        System.out.println(fn);
-            
-        return fn;
+        JCTree.JCClassDecl newBody = maker.ClassDef(
+            body.getModifiers(),
+            body.getSimpleName(),
+            body.getTypeParameters(),
+            body.getExtendsClause(), // TODO: compile failed when java7
+            body.getImplementsClause(),
+            List.<JCTree>of(method));
+        JCTree.JCNewClass newNewClass = maker.NewClass(
+            fn.getEnclosingExpression(),
+            fn.getTypeArguments(),
+            maker.TypeApply(
+                maker.QualIdent(elems.getTypeElement("com.google.common.base.Function")),
+                typeArgs),
+            fn.getArguments(),
+            newBody);
+        return newNewClass;
     }
 }
