@@ -3,8 +3,8 @@ import com.github.buzztaiki.jenova.Jenova;
 @Jenova
 public class Example {
     public static void main(String[] args) throws Exception {
-        new fn(){{
-            return _ * 2;
+        new fn<Integer, String>(){{
+            return Integer.toString(_);
         }};
     }
 }

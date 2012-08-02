@@ -20,14 +20,18 @@
  */
 package com.github.buzztaiki.jenova;
 
-import com.sun.tools.javac.tree.JCTree;
-
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.Name;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -61,17 +65,55 @@ public class AnnotationProcessor extends AbstractProcessor {
             if (unit == null) continue;
             if (unit.sourcefile.getKind() != JavaFileObject.Kind.SOURCE) continue;
             unit.accept(new TreeTranslator() {
-                @Override public void visitNewClass(JCTree.JCNewClass tree) {
-                    super.visitNewClass(tree);
-                    System.out.println(tree);
+                @Override public <T extends JCTree> T translate(T tree) {
+                    // printTree(tree);
+                    if (tree instanceof JCTree.JCNewClass) {
+                        JCTree.JCNewClass nc = (JCTree.JCNewClass)tree;
+                        if (nc.getIdentifier().toString().startsWith("fn<")) {
+                            return (T)translateFn(nc);
+                        }
+                    }
+                    return super.translate(tree);
                 }
             });
         }
         return false;
     }
 
+    private void printTree(JCTree tree) {
+        if (tree == null) return;
+        System.out.format("##%s:%s%n", tree.getClass(), tree);
+    }
+
     private JCTree.JCCompilationUnit toUnit(Element element) {
         TreePath path = Trees.instance(processingEnv).getPath(element);
         return (path == null) ? null : (JCTree.JCCompilationUnit)path.getCompilationUnit();
+    }
+
+    private JCTree translateFn(JCTree.JCNewClass fn) {
+        JCTree.JCTypeApply ta = (JCTree.JCTypeApply)fn.getIdentifier();
+        List<JCTree.JCExpression> typeArgs = ta.getTypeArguments();
+        TreeMaker maker = TreeMaker.instance(context);
+        JavacElements elems = JavacElements.instance(context);
+
+        List<JCTree> members = fn.getClassBody().getMembers();
+        JCTree.JCBlock initBlock = (JCTree.JCBlock)(members.get(0));
+        JCTree.JCMethodDecl method = maker.MethodDef(
+            maker.Modifiers(Flags.PUBLIC),
+            elems.getName("apply"),
+            typeArgs.get(1),
+            List.<JCTree.JCTypeParameter>nil(),
+            List.of(maker.VarDef(
+                maker.Modifiers(0),
+                elems.getName("_"),
+                typeArgs.get(0),
+                null)),
+            List.<JCTree.JCExpression>nil(),
+            initBlock,
+            null);
+        System.out.println(method);
+        System.out.println(fn);
+            
+        return fn;
     }
 }
