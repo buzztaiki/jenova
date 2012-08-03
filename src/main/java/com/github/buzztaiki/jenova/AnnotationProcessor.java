@@ -27,6 +27,7 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
@@ -47,6 +48,7 @@ public class AnnotationProcessor extends AbstractProcessor {
     private Context context;
     private TreeMaker maker;
     private JavacElements elems;
+    private TreeInfo info;
 
     @Override
     public void init(ProcessingEnvironment processingEnv) {
@@ -59,6 +61,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         if (context != null) {
             maker = TreeMaker.instance(context);
             elems = JavacElements.instance(context);
+            info = TreeInfo.instance(context);
         }
     }
 
@@ -73,7 +76,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             unit.accept(new TreeTranslator() {
                 @Override public void visitNewClass(JCTree.JCNewClass tree) {
                     super.visitNewClass(tree);
-                    if (tree.getIdentifier().toString().startsWith("fn<")) {
+                    if (info.name(tree.getIdentifier()).toString().equals("fn")) {
                         result = translateFn(tree);
                     }
                 }
