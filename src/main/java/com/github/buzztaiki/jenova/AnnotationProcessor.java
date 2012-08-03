@@ -71,15 +71,11 @@ public class AnnotationProcessor extends AbstractProcessor {
             if (unit == null) continue;
             if (unit.sourcefile.getKind() != JavaFileObject.Kind.SOURCE) continue;
             unit.accept(new TreeTranslator() {
-                @Override public <T extends JCTree> T translate(T tree) {
-                    // printTree(tree);
-                    if (tree instanceof JCTree.JCNewClass) {
-                        JCTree.JCNewClass nc = (JCTree.JCNewClass)tree;
-                        if (nc.getIdentifier().toString().startsWith("fn<")) {
-                            return (T)translateFn(nc);
-                        }
+                @Override public void visitNewClass(JCTree.JCNewClass tree) {
+                    super.visitNewClass(tree);
+                    if (tree.getIdentifier().toString().startsWith("fn<")) {
+                        result = translateFn(tree);
                     }
-                    return super.translate(tree);
                 }
             });
         }
