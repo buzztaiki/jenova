@@ -96,9 +96,7 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
     private JCTree translateFn(JCTree.JCNewClass fn) {
-        JCTree.JCTypeApply ta = (JCTree.JCTypeApply)fn.getIdentifier();
-        List<JCTree.JCExpression> typeArgs = ta.getTypeArguments();
-
+        List<JCTree.JCExpression> typeArgs = appliedTypes(fn.getIdentifier());
         JCTree.JCClassDecl body = fn.getClassBody();
         List<JCTree> members = body.getMembers();
         JCTree.JCBlock initBlock = (JCTree.JCBlock)(members.get(0));
@@ -115,12 +113,25 @@ public class AnnotationProcessor extends AbstractProcessor {
         JCTree.JCNewClass newNewClass = maker.NewClass(
             fn.getEnclosingExpression(),
             fn.getTypeArguments(),
-            maker.TypeApply(
-                maker.QualIdent(elems.getTypeElement("com.google.common.base.Function")),
-                typeArgs),
+            ident(fn.getIdentifier(), "com.google.common.base.Function"),
             fn.getArguments(),
             newBody);
         return newNewClass;
+    }
+
+    private JCTree.JCExpression ident(JCTree.JCExpression orig, String name) {
+        JCTree.JCExpression ident = maker.QualIdent(elems.getTypeElement(name));
+        List<JCTree.JCExpression> typeArgs = appliedTypes(orig);
+        if (typeArgs != null) return maker.TypeApply(ident, typeArgs);
+        return ident;
+    }
+
+    private List<JCTree.JCExpression> appliedTypes(JCTree.JCExpression ident) {
+        if (ident instanceof JCTree.JCTypeApply) {
+            JCTree.JCTypeApply ta = (JCTree.JCTypeApply)ident;
+            return ta.getTypeArguments();
+        }
+        return null;
     }
 
     private JCTree.JCVariableDecl arg(String name,  JCTree.JCExpression vartype) {
