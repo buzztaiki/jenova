@@ -45,6 +45,8 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes("com.github.buzztaiki.jenova.Jenova")
 public class AnnotationProcessor extends AbstractProcessor {
     private Context context;
+    private TreeMaker maker;
+    private JavacElements elems;
 
     @Override
     public void init(ProcessingEnvironment processingEnv) {
@@ -54,6 +56,10 @@ public class AnnotationProcessor extends AbstractProcessor {
             return;
         }
         context = ((JavacProcessingEnvironment)processingEnv).getContext();
+        if (context != null) {
+            maker = TreeMaker.instance(context);
+            elems = JavacElements.instance(context);
+        }
     }
 
     @Override
@@ -93,8 +99,6 @@ public class AnnotationProcessor extends AbstractProcessor {
     private JCTree translateFn(JCTree.JCNewClass fn) {
         JCTree.JCTypeApply ta = (JCTree.JCTypeApply)fn.getIdentifier();
         List<JCTree.JCExpression> typeArgs = ta.getTypeArguments();
-        TreeMaker maker = TreeMaker.instance(context);
-        JavacElements elems = JavacElements.instance(context);
 
         JCTree.JCClassDecl body = fn.getClassBody();
         List<JCTree> members = body.getMembers();
@@ -104,11 +108,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             elems.getName("apply"),
             typeArgs.get(1),
             List.<JCTree.JCTypeParameter>nil(),
-            List.of(maker.VarDef(
-                maker.Modifiers(0),
-                elems.getName("_"),
-                typeArgs.get(0),
-                null)),
+            List.of(arg("_", typeArgs.get(0))),
             List.<JCTree.JCExpression>nil(),
             initBlock,
             null);
@@ -128,5 +128,9 @@ public class AnnotationProcessor extends AbstractProcessor {
             fn.getArguments(),
             newBody);
         return newNewClass;
+    }
+
+    private JCTree.JCVariableDecl arg(String name,  JCTree.JCExpression vartype) {
+        return maker.VarDef(maker.Modifiers(0), elems.getName(name), vartype, null);
     }
 }
