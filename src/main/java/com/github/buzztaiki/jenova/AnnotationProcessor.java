@@ -108,13 +108,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             List.<JCTree.JCExpression>nil(),
             initBlock,
             null);
-        JCTree.JCClassDecl newBody = maker.ClassDef(
-            body.getModifiers(),
-            body.getSimpleName(),
-            body.getTypeParameters(),
-            body.getExtendsClause(), // TODO: compile failed when java7
-            body.getImplementsClause(),
-            List.<JCTree>of(method));
+        JCTree.JCClassDecl newBody = classBody(body, method);
         JCTree.JCNewClass newNewClass = maker.NewClass(
             fn.getEnclosingExpression(),
             fn.getTypeArguments(),
@@ -128,5 +122,15 @@ public class AnnotationProcessor extends AbstractProcessor {
 
     private JCTree.JCVariableDecl arg(String name,  JCTree.JCExpression vartype) {
         return maker.VarDef(maker.Modifiers(0), elems.getName(name), vartype, null);
+    }
+
+    private JCTree.JCClassDecl classBody(JCTree.JCClassDecl orig, JCTree.JCMethodDecl method) {
+        return maker.ClassDef(
+            orig.getModifiers(),
+            orig.getSimpleName(),
+            orig.getTypeParameters(),
+            orig.getExtendsClause(), // TODO: compile failed when java7
+            orig.getImplementsClause(),
+            List.<JCTree>of(method));
     }
 }
