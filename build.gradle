@@ -14,3 +14,8 @@ dependencies {
     compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
 
+compileJava.options.with {
+    debug = true
+    optimize = true
+    compilerArgs = ['-Xlint:all']
+}
