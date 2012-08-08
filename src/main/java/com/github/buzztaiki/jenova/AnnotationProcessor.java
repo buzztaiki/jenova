@@ -109,14 +109,9 @@ public class AnnotationProcessor extends AbstractProcessor {
             List.<JCTree.JCExpression>nil(),
             initBlock,
             null);
-        JCTree.JCClassDecl newBody = classBody(body, method);
-        JCTree.JCNewClass newNewClass = maker.NewClass(
-            fn.getEnclosingExpression(),
-            fn.getTypeArguments(),
-            ident(fn.getIdentifier(), "com.google.common.base.Function"),
-            fn.getArguments(),
-            newBody);
-        return newNewClass;
+        return newClass(
+            fn, "com.google.common.base.Function",
+            classBody(body, method));
     }
 
     private JCTree.JCExpression ident(JCTree.JCExpression orig, String name) {
@@ -146,5 +141,14 @@ public class AnnotationProcessor extends AbstractProcessor {
             orig.getExtendsClause(), // TODO: compile failed when java7
             orig.getImplementsClause(),
             List.<JCTree>of(method));
+    }
+
+    private JCTree.JCNewClass newClass(JCTree.JCNewClass orig, String name, JCTree.JCClassDecl classBody) {
+        return maker.NewClass(
+            orig.getEnclosingExpression(),
+            orig.getTypeArguments(),
+            ident(orig.getIdentifier(), name),
+            orig.getArguments(),
+            classBody);
     }
 }
