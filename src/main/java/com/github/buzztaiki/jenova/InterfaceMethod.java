@@ -20,11 +20,41 @@
  */
 package com.github.buzztaiki.jenova;
 
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 
 public class InterfaceMethod {
+    private final Symbol.ClassSymbol clazz;
+    private final Symbol.MethodSymbol method;
+    private final JavacElements elems;
+
+    public InterfaceMethod(Context context, Symbol.ClassSymbol clazz) {
+        this.clazz = clazz;
+        this.method = findMethod(clazz);
+        this.elems = JavacElements.instance(context);
+    }
+
+    static Symbol.MethodSymbol findMethod(Symbol.ClassSymbol clazz) {
+        for (Symbol sym : clazz.members().getElements()) {
+            if (!(sym instanceof Symbol.MethodSymbol)) continue;
+            Symbol.MethodSymbol method = (Symbol.MethodSymbol)sym;
+            if (!baseMethod(method)) {
+                return method;
+            }
+        }
+        throw new IllegalArgumentException(clazz + " doesn't have interface method.");
+    }
+
+    static boolean baseMethod(Symbol.MethodSymbol method) {
+        // TODO: find methods from java.lang.Object
+        if (method.flatName().contentEquals("equals")) return true;
+        return false;
+    }
+
     public List<JCTree.JCExpression> getParamTypes(List<JCTree.JCExpression> typeArgs) {
         throw new UnsupportedOperationException();
     }
