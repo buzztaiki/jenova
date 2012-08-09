@@ -62,9 +62,9 @@ public class InterfaceMethod {
         throw new UnsupportedOperationException();
     }
     public Name getMethodName() {
-        throw new UnsupportedOperationException();
+        return method.flatName();
     }
     public Name getClassName() {
-        throw new UnsupportedOperationException();
+        return clazz.flatName();
     }
 }

@@ -58,4 +58,14 @@ public class InterfaceMethodTest {
         Symbol.ClassSymbol cloneable = elems.getTypeElement("java.lang.Cloneable");
         InterfaceMethod.findMethod(cloneable);
     }
+
+    @Test public void getMethodName() throws Exception {
+        InterfaceMethod im = new InterfaceMethod(context, cmp);
+        assertThat(im.getMethodName(), is(elems.getName("compare")));
+    }
+
+    @Test public void getClassName() throws Exception {
+        InterfaceMethod im = new InterfaceMethod(context, cmp);
+        assertThat(im.getClassName(), is(elems.getName("java.util.Comparator")));
+    }
 }
