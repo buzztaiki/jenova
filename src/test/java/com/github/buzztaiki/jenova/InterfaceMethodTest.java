@@ -23,6 +23,7 @@ package com.github.buzztaiki.jenova;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import com.google.common.base.Function;
 import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -34,6 +35,7 @@ import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
+import java.util.Comparator;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -54,7 +56,7 @@ public class InterfaceMethodTest {
         maker = TreeMaker.instance(context);
         info = TreeInfo.instance(context);
         types = Types.instance(context);
-        cmp = elems.getTypeElement("java.util.Comparator");
+        cmp = typeElement(Comparator.class);
     }
 
     @Test public void baseMethod_Base() throws Exception {
@@ -75,7 +77,7 @@ public class InterfaceMethodTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void findMethod_NotFound() throws Exception {
-        Symbol.ClassSymbol cloneable = elems.getTypeElement("java.lang.Cloneable");
+        Symbol.ClassSymbol cloneable = typeElement(Cloneable.class);
         InterfaceMethod.findMethod(context, cloneable);
     }
 
@@ -92,35 +94,35 @@ public class InterfaceMethodTest {
     @Test public void getReturnType_NotMatchTypeArgs() throws Exception {
         InterfaceMethod im = new InterfaceMethod(context, cmp);
         List<JCTree.JCExpression> typeArgs = List.of(
-            maker.QualIdent(elems.getTypeElement("java.lang.Object")));
+            maker.QualIdent(typeElement(Object.class)));
         assertThat(type(im.getReturnType(typeArgs)).tag, is(TypeTags.INT));
     }
 
     @Test public void getReturnType_MatchTypeArgs() throws Exception {
-        Symbol.ClassSymbol fn = elems.getTypeElement("com.google.common.base.Function");
+        Symbol.ClassSymbol fn = typeElement(Function.class);
         InterfaceMethod im = new InterfaceMethod(context, fn);
         List<JCTree.JCExpression> typeArgs = List.of(
-            maker.QualIdent(elems.getTypeElement("java.lang.Integer")),
-            maker.QualIdent(elems.getTypeElement("java.lang.String")));
+            maker.QualIdent(typeElement(Integer.class)),
+            maker.QualIdent(typeElement(String.class)));
         assertThat(
             type(im.getReturnType(typeArgs)),
-            is(sameType(elems.getTypeElement("java.lang.String").asType())));
+            is(sameType(typeElement(String.class).asType())));
     }
 
     @Test public void getReturnType_NoTypeArgs() throws Exception {
-        Symbol.ClassSymbol run = elems.getTypeElement("java.lang.Runnable");
+        Symbol.ClassSymbol run = typeElement(Runnable.class);
         InterfaceMethod im = new InterfaceMethod(context, run);
         List<JCTree.JCExpression> typeArgs = List.nil();
         assertThat(type(im.getReturnType(typeArgs)).tag, is(TypeTags.VOID));
     }
 
     @Test public void getReturnType_RealType() throws Exception {
-        Symbol.ClassSymbol i2s = elems.getTypeElement(IntegerToString.class.getCanonicalName());
+        Symbol.ClassSymbol i2s = typeElement(IntegerToString.class);
         InterfaceMethod im = new InterfaceMethod(context, i2s);
         List<JCTree.JCExpression> typeArgs = List.nil();
         assertThat(
             type(im.getReturnType(typeArgs)),
-            is(sameType(elems.getTypeElement("java.lang.String").asType())));
+            is(sameType(typeElement(String.class).asType())));
     }
 
     @Test(expected=IllegalArgumentException.class)
@@ -128,6 +130,10 @@ public class InterfaceMethodTest {
         InterfaceMethod im = new InterfaceMethod(context, cmp);
         List<JCTree.JCExpression> typeArgs = List.nil();
         im.getReturnType(typeArgs);
+    }
+
+    private Symbol.ClassSymbol typeElement(Class<?> clazz) {
+        return elems.getTypeElement(clazz.getCanonicalName());
     }
 
     private Type type(JCTree tree) {
