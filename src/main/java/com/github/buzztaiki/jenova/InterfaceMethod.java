@@ -35,6 +35,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.ListBuffer;
 import com.sun.tools.javac.util.Name;
 
 public class InterfaceMethod {
@@ -96,11 +97,23 @@ public class InterfaceMethod {
     }
 
     public List<JCTree.JCExpression> getParamTypes(List<JCTree.JCExpression> typeArgs) {
-        throw new UnsupportedOperationException();
+        Preconditions.checkArgument(typeArgs.size() == clazz.getTypeParameters().size(),
+            "typeArgs length should be %d but %d", typeArgs.size(), clazz.getTypeParameters().size());
+
+        Iterable<Type> typeParams = types(clazz.getTypeParameters());
+        Equivalence<Type> sameType = sameType(types);
+        ListBuffer<JCTree.JCExpression> res = new ListBuffer<JCTree.JCExpression>();
+        for (Type type : types(method.getParameters())) {
+            int i = Iterables.indexOf(typeParams, sameType.equivalentTo(type));
+            res.append(i >= 0 ? typeArgs.get(i) : maker.Type(type));
+        }
+        return res.toList();
     }
+
     public JCTree.JCExpression getReturnType(List<JCTree.JCExpression> typeArgs) {
         Preconditions.checkArgument(typeArgs.size() == clazz.getTypeParameters().size(),
             "typeArgs length should be %d but %d", typeArgs.size(), clazz.getTypeParameters().size());
+
         Type ret = method.getReturnType();
         int i = 0;
         for (Type type : types(clazz.getTypeParameters())) {

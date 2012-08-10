@@ -20,8 +20,8 @@
  */
 package com.github.buzztaiki.jenova;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.MatcherAssert.*;
 
 import com.google.common.base.Function;
 import com.sun.tools.javac.code.Scope;
@@ -130,6 +130,29 @@ public class InterfaceMethodTest {
         InterfaceMethod im = new InterfaceMethod(context, cmp);
         List<JCTree.JCExpression> typeArgs = List.nil();
         im.getReturnType(typeArgs);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void getParamTypes_NotMatchTypeArgs() throws Exception {
+        InterfaceMethod im = new InterfaceMethod(context, cmp);
+        List<JCTree.JCExpression> typeArgs = List.of(
+            maker.QualIdent(typeElement(Object.class)));
+        assertThat(
+            info.types(im.getParamTypes(typeArgs)),
+            contains(
+                sameType(typeElement(Object.class).asType()),
+                sameType(typeElement(Object.class).asType())));
+    }
+
+    @Test public void getParamTypes_MatchTypeArgs() throws Exception {
+        Symbol.ClassSymbol fn = typeElement(Function.class);
+        InterfaceMethod im = new InterfaceMethod(context, fn);
+        List<JCTree.JCExpression> typeArgs = List.of(
+            maker.QualIdent(typeElement(Integer.class)),
+            maker.QualIdent(typeElement(String.class)));
+        assertThat(
+            info.types(im.getParamTypes(typeArgs)),
+            contains(sameType(typeElement(Integer.class).asType())));
     }
 
     private Symbol.ClassSymbol typeElement(Class<?> clazz) {
