@@ -21,6 +21,7 @@
 package com.github.buzztaiki.jenova;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.sun.tools.javac.code.Scope;
@@ -29,6 +30,7 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.model.FilteredMemberList;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
@@ -37,11 +39,13 @@ public class InterfaceMethod {
     private final Symbol.ClassSymbol clazz;
     private final Symbol.MethodSymbol method;
     private final JavacElements elems;
+    private final TreeMaker maker;
 
     public InterfaceMethod(Context context, Symbol.ClassSymbol clazz) {
         this.clazz = clazz;
         this.method = findMethod(context, clazz);
         this.elems = JavacElements.instance(context);
+        this.maker = TreeMaker.instance(context);
     }
 
     static Symbol.MethodSymbol findMethod(Context context, Symbol.ClassSymbol clazz) {
@@ -79,7 +83,15 @@ public class InterfaceMethod {
         throw new UnsupportedOperationException();
     }
     public JCTree.JCExpression getReturnType(List<JCTree.JCExpression> typeArgs) {
-        throw new UnsupportedOperationException();
+        Preconditions.checkArgument(typeArgs.size() == clazz.getTypeParameters().size(),
+            "typeArgs length should be %d but %d", typeArgs.size(), clazz.getTypeParameters().size());
+        Type ret = method.getReturnType();
+        int i = 0;
+        for (Type type : types(clazz.getTypeParameters())) {
+            if (ret.equals(type)) return typeArgs.get(i);
+            i++;
+        }
+        return maker.Type(ret);
     }
     public Name getMethodName() {
         return method.flatName();

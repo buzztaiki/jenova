@@ -25,19 +25,35 @@ import static org.junit.Assert.*;
 
 import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.TypeTags;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.List;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
 
 public class InterfaceMethodTest {
     private Context context;
     private JavacElements elems;
+    private TreeMaker maker;
+    private TreeInfo info;
+    private Types types;
     private Symbol.ClassSymbol cmp;
 
     @Before public void setUp() throws Exception {
         context = new Context();
         elems = JavacElements.instance(context);
+        maker = TreeMaker.instance(context);
+        info = TreeInfo.instance(context);
+        types = Types.instance(context);
         cmp = elems.getTypeElement("java.util.Comparator");
     }
 
@@ -71,5 +87,65 @@ public class InterfaceMethodTest {
     @Test public void getClassName() throws Exception {
         InterfaceMethod im = new InterfaceMethod(context, cmp);
         assertThat(im.getClassName(), is(elems.getName("java.util.Comparator")));
+    }
+
+    @Test public void getReturnType_NotMatchTypeArgs() throws Exception {
+        InterfaceMethod im = new InterfaceMethod(context, cmp);
+        List<JCTree.JCExpression> typeArgs = List.of(
+            maker.QualIdent(elems.getTypeElement("java.lang.Object")));
+        assertThat(type(im.getReturnType(typeArgs)).tag, is(TypeTags.INT));
+    }
+
+    @Test public void getReturnType_MatchTypeArgs() throws Exception {
+        Symbol.ClassSymbol fn = elems.getTypeElement("com.google.common.base.Function");
+        InterfaceMethod im = new InterfaceMethod(context, fn);
+        List<JCTree.JCExpression> typeArgs = List.of(
+            maker.QualIdent(elems.getTypeElement("java.lang.Integer")),
+            maker.QualIdent(elems.getTypeElement("java.lang.String")));
+        assertThat(
+            type(im.getReturnType(typeArgs)),
+            is(sameType(elems.getTypeElement("java.lang.String").asType())));
+    }
+
+    @Test public void getReturnType_NoTypeArgs() throws Exception {
+        Symbol.ClassSymbol run = elems.getTypeElement("java.lang.Runnable");
+        InterfaceMethod im = new InterfaceMethod(context, run);
+        List<JCTree.JCExpression> typeArgs = List.nil();
+        assertThat(type(im.getReturnType(typeArgs)).tag, is(TypeTags.VOID));
+    }
+
+    @Test public void getReturnType_RealType() throws Exception {
+        Symbol.ClassSymbol i2s = elems.getTypeElement(IntegerToString.class.getCanonicalName());
+        InterfaceMethod im = new InterfaceMethod(context, i2s);
+        List<JCTree.JCExpression> typeArgs = List.nil();
+        assertThat(
+            type(im.getReturnType(typeArgs)),
+            is(sameType(elems.getTypeElement("java.lang.String").asType())));
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void getReturnType_InvalidTypeArgfs_() throws Exception {
+        InterfaceMethod im = new InterfaceMethod(context, cmp);
+        List<JCTree.JCExpression> typeArgs = List.nil();
+        im.getReturnType(typeArgs);
+    }
+
+    private Type type(JCTree tree) {
+        return info.types(List.of(tree)).get(0);
+    }
+
+    private <T extends Type> Matcher<T> sameType(final T type) {
+        return new TypeSafeMatcher<T>() {
+			@Override public void describeTo(Description description) {
+				description.appendText(type.toString());
+			}
+            @Override protected boolean matchesSafely(T item) {
+                return types.isSameType(type, item);
+            }
+        };
+    }
+
+    public static interface IntegerToString {
+        public String toString(Integer i);
     }
 }
