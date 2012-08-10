@@ -20,6 +20,7 @@
  */
 package com.github.buzztaiki.jenova;
 
+import com.google.common.base.Equivalence;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -27,6 +28,7 @@ import com.google.common.collect.Iterables;
 import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.FilteredMemberList;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
@@ -40,12 +42,14 @@ public class InterfaceMethod {
     private final Symbol.MethodSymbol method;
     private final JavacElements elems;
     private final TreeMaker maker;
+    private final Types types;
 
     public InterfaceMethod(Context context, Symbol.ClassSymbol clazz) {
         this.clazz = clazz;
         this.method = findMethod(context, clazz);
         this.elems = JavacElements.instance(context);
         this.maker = TreeMaker.instance(context);
+        this.types = Types.instance(context);
     }
 
     static Symbol.MethodSymbol findMethod(Context context, Symbol.ClassSymbol clazz) {
@@ -57,16 +61,28 @@ public class InterfaceMethod {
 
     static boolean baseMethod(Context context, Symbol.MethodSymbol method) {
         JavacElements elems = JavacElements.instance(context);
+        Types types = Types.instance(context);
         for (Symbol.MethodSymbol baseMethod : methods(elems.getTypeElement("java.lang.Object"))) {
-            if (sameMethod(baseMethod, method)) return true;
+            if (sameMethod(types, baseMethod, method)) return true;
         }
         return false;
     }
 
-    private static boolean sameMethod(Symbol.MethodSymbol a, Symbol.MethodSymbol b) {
+    private static boolean sameMethod(Types types, Symbol.MethodSymbol a, Symbol.MethodSymbol b) {
         return
             a.flatName().equals(b.flatName())
-            && Iterables.elementsEqual(types(a.params()), types(b.params()));
+            && sameType(types).pairwise().equivalent(types(a.params()), types(b.params()));
+    }
+
+    private static Equivalence<Type> sameType(final Types types) {
+        return new Equivalence<Type>() {
+            @Override protected boolean doEquivalent(Type a, Type b) {
+                return types.isSameType(a, b);
+            }
+            @Override protected int doHash(Type t) {
+                return types.hashCode(t);
+            }
+        };
     }
 
     private static Iterable<Symbol.MethodSymbol> methods(Symbol.ClassSymbol clazz) {
@@ -75,7 +91,7 @@ public class InterfaceMethod {
 
     private static Iterable<Type> types(Iterable<? extends Symbol> syms) {
         return Iterables.transform(syms, new Function<Symbol, Type>() {
-            public Type apply(Symbol sym) {return sym.asType();}
+            @Override public Type apply(Symbol sym) {return sym.asType();}
         });
     }
 
@@ -88,7 +104,7 @@ public class InterfaceMethod {
         Type ret = method.getReturnType();
         int i = 0;
         for (Type type : types(clazz.getTypeParameters())) {
-            if (ret.equals(type)) return typeArgs.get(i);
+            if (types.isSameType(ret, type)) return typeArgs.get(i);
             i++;
         }
         return maker.Type(ret);
