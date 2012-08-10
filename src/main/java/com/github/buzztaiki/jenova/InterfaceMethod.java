@@ -20,7 +20,13 @@
  */
 package com.github.buzztaiki.jenova;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.model.FilteredMemberList;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
@@ -34,25 +40,39 @@ public class InterfaceMethod {
 
     public InterfaceMethod(Context context, Symbol.ClassSymbol clazz) {
         this.clazz = clazz;
-        this.method = findMethod(clazz);
+        this.method = findMethod(context, clazz);
         this.elems = JavacElements.instance(context);
     }
 
-    static Symbol.MethodSymbol findMethod(Symbol.ClassSymbol clazz) {
-        for (Symbol sym : clazz.members().getElements()) {
-            if (!(sym instanceof Symbol.MethodSymbol)) continue;
-            Symbol.MethodSymbol method = (Symbol.MethodSymbol)sym;
-            if (!baseMethod(method)) {
-                return method;
-            }
+    static Symbol.MethodSymbol findMethod(Context context, Symbol.ClassSymbol clazz) {
+        for (Symbol.MethodSymbol method : methods(clazz)) {
+            if (!baseMethod(context, method)) return method;
         }
         throw new IllegalArgumentException(clazz + " doesn't have interface method.");
     }
 
-    static boolean baseMethod(Symbol.MethodSymbol method) {
-        // TODO: find methods from java.lang.Object
-        if (method.flatName().contentEquals("equals")) return true;
+    static boolean baseMethod(Context context, Symbol.MethodSymbol method) {
+        JavacElements elems = JavacElements.instance(context);
+        for (Symbol.MethodSymbol baseMethod : methods(elems.getTypeElement("java.lang.Object"))) {
+            if (sameMethod(baseMethod, method)) return true;
+        }
         return false;
+    }
+
+    private static boolean sameMethod(Symbol.MethodSymbol a, Symbol.MethodSymbol b) {
+        return
+            a.flatName().equals(b.flatName())
+            && Iterables.elementsEqual(types(a.params()), types(b.params()));
+    }
+
+    private static Iterable<Symbol.MethodSymbol> methods(Symbol.ClassSymbol clazz) {
+        return Iterables.filter(clazz.members().getElements(), Symbol.MethodSymbol.class);
+    }
+
+    private static Iterable<Type> types(Iterable<? extends Symbol> syms) {
+        return Iterables.transform(syms, new Function<Symbol, Type>() {
+            public Type apply(Symbol sym) {return sym.asType();}
+        });
     }
 
     public List<JCTree.JCExpression> getParamTypes(List<JCTree.JCExpression> typeArgs) {

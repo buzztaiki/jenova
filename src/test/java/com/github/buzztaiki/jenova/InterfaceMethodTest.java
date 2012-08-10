@@ -41,22 +41,26 @@ public class InterfaceMethodTest {
         cmp = elems.getTypeElement("java.util.Comparator");
     }
 
-    @Test public void baseMethod() throws Exception {
+    @Test public void baseMethod_Base() throws Exception {
         Scope members = cmp.members();
         Symbol eq = members.lookup(elems.getName("equals")).sym;
-        assertThat(InterfaceMethod.baseMethod((Symbol.MethodSymbol)eq), is(true));
+        assertThat(InterfaceMethod.baseMethod(context, (Symbol.MethodSymbol)eq), is(true));
+    }
+
+    @Test public void baseMethod_NotBase() throws Exception {
+        Scope members = cmp.members();
         Symbol compare = members.lookup(elems.getName("compare")).sym;
-        assertThat(InterfaceMethod.baseMethod((Symbol.MethodSymbol)compare), is(false));
+        assertThat(InterfaceMethod.baseMethod(context, (Symbol.MethodSymbol)compare), is(false));
     }
 
     @Test public void findMethod() throws Exception {
-        assertThat(InterfaceMethod.findMethod(cmp).flatName(), is(elems.getName("compare")));
+        assertThat(InterfaceMethod.findMethod(context, cmp).flatName(), is(elems.getName("compare")));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void findMethod_NotFound() throws Exception {
         Symbol.ClassSymbol cloneable = elems.getTypeElement("java.lang.Cloneable");
-        InterfaceMethod.findMethod(cloneable);
+        InterfaceMethod.findMethod(context, cloneable);
     }
 
     @Test public void getMethodName() throws Exception {
