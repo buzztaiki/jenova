@@ -98,7 +98,7 @@ public class InterfaceMethod {
 
     public List<JCTree.JCExpression> getParamTypes(List<JCTree.JCExpression> typeArgs) {
         Preconditions.checkArgument(typeArgs.size() == clazz.getTypeParameters().size(),
-            "typeArgs length should be %d but %d", typeArgs.size(), clazz.getTypeParameters().size());
+            "typeArgs length should be %s but %s", typeArgs.size(), clazz.getTypeParameters().size());
 
         Iterable<Type> typeParams = types(clazz.getTypeParameters());
         Equivalence<Type> sameType = sameType(types);
@@ -112,7 +112,7 @@ public class InterfaceMethod {
 
     public JCTree.JCExpression getReturnType(List<JCTree.JCExpression> typeArgs) {
         Preconditions.checkArgument(typeArgs.size() == clazz.getTypeParameters().size(),
-            "typeArgs length should be %d but %d", typeArgs.size(), clazz.getTypeParameters().size());
+            "typeArgs length should be %s but %s", typeArgs.size(), clazz.getTypeParameters().size());
 
         Type ret = method.getReturnType();
         int i = 0;
