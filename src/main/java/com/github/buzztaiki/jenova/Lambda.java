@@ -25,8 +25,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target({})
 @Retention(RetentionPolicy.SOURCE)
-public @interface Jenova {
-    Lambda[] value() default {};
+public @interface Lambda {
+    String name();
+    Class<?> type();
 }
