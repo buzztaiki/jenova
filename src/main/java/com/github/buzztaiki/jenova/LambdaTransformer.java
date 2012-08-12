@@ -69,7 +69,7 @@ public class LambdaTransformer {
     }
 
     private JCTree.JCExpression ident(JCTree.JCExpression orig, Name name) {
-        JCTree.JCExpression ident = maker.Ident(name);
+        JCTree.JCExpression ident = maker.QualIdent(elems.getTypeElement(name));
         List<JCTree.JCExpression> typeArgs = appliedTypes(orig);
         if (!typeArgs.isEmpty()) return maker.TypeApply(ident, typeArgs);
         return ident;

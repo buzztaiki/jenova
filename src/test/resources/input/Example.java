@@ -10,7 +10,8 @@ import java.util.List;
 public class Example {
     public List<String> transform(List<Integer> l) {
         return Lists.transform(l, new fn<Integer, String>() {{
-            return Integer.toString(_ * 2);
+            return Integer.toString(_1 * 2);
         }});
+        // return Lists.newArrayList();
     }
 }

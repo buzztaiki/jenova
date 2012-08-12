@@ -39,13 +39,13 @@ import com.sun.tools.javac.util.ListBuffer;
 import com.sun.tools.javac.util.Name;
 
 public class InterfaceMethod {
-    private final Symbol.ClassSymbol clazz;
+    private final Symbol.TypeSymbol clazz;
     private final Symbol.MethodSymbol method;
     private final JavacElements elems;
     private final TreeMaker maker;
     private final Types types;
 
-    public InterfaceMethod(Context context, Symbol.ClassSymbol clazz) {
+    public InterfaceMethod(Context context, Symbol.TypeSymbol clazz) {
         this.clazz = clazz;
         this.method = findMethod(context, clazz);
         this.elems = JavacElements.instance(context);
@@ -53,7 +53,7 @@ public class InterfaceMethod {
         this.types = Types.instance(context);
     }
 
-    static Symbol.MethodSymbol findMethod(Context context, Symbol.ClassSymbol clazz) {
+    static Symbol.MethodSymbol findMethod(Context context, Symbol.TypeSymbol clazz) {
         for (Symbol.MethodSymbol method : methods(clazz)) {
             if (!baseMethod(context, method)) return method;
         }
@@ -86,7 +86,7 @@ public class InterfaceMethod {
         };
     }
 
-    private static Iterable<Symbol.MethodSymbol> methods(Symbol.ClassSymbol clazz) {
+    private static Iterable<Symbol.MethodSymbol> methods(Symbol.TypeSymbol clazz) {
         return Iterables.filter(clazz.members().getElements(), Symbol.MethodSymbol.class);
     }
 

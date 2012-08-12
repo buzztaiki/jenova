@@ -70,7 +70,7 @@ public class LambdaTransformerTest {
         assertThat(
             compress(transformer.transform(fn)),
             is(compress(
-                "new com.google.common.base.Function<Integer, Integer>(){",
+                "new .com.google.common.base.Function<Integer, Integer>(){",
                 "public Integer apply(Integer _1) {return 10;}",
                 "}")));
     }
@@ -81,7 +81,7 @@ public class LambdaTransformerTest {
         assertThat(
             compress(transformer.transform(fn)),
             is(compress(
-                "new java.lang.Runnable(){",
+                "new .java.lang.Runnable(){",
                 "public void run() {Thread.sleep(10);}",
                 "}")));
     }
