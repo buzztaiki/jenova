@@ -81,14 +81,14 @@ public class InterfaceMethodTest {
         InterfaceMethod.findMethod(context, cloneable);
     }
 
-    @Test public void getMethodName() throws Exception {
+    @Test public void getMethod() throws Exception {
         InterfaceMethod im = new InterfaceMethod(context, cmp);
-        assertThat(im.getMethodName(), is(elems.getName("compare")));
+        assertThat(im.getMethod().flatName(), is(elems.getName("compare")));
     }
 
-    @Test public void getClassName() throws Exception {
+    @Test public void getClazz() throws Exception {
         InterfaceMethod im = new InterfaceMethod(context, cmp);
-        assertThat(im.getClassName(), is(elems.getName("java.util.Comparator")));
+        assertThat(im.getClazz().flatName(), is(elems.getName("java.util.Comparator")));
     }
 
     @Test public void getReturnType_NotMatchTypeArgs() throws Exception {

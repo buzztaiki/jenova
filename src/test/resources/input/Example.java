@@ -9,9 +9,11 @@ import java.util.List;
 )
 public class Example {
     public List<String> transform(List<Integer> l) {
+        l = Lists.transform(l, new fn<Integer, Integer>() {{
+            return _1;
+        }});
         return Lists.transform(l, new fn<Integer, String>() {{
             return Integer.toString(_1 * 2);
         }});
-        // return Lists.newArrayList();
     }
 }

@@ -21,6 +21,7 @@
 package com.github.buzztaiki.jenova;
 
 import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
@@ -56,7 +57,7 @@ public class LambdaTransformer {
         List<JCTree.JCExpression> typeArgs = appliedTypes(fn.getIdentifier());
         JCTree.JCMethodDecl method = maker.MethodDef(
             maker.Modifiers(Flags.PUBLIC),
-            ifMethod.getMethodName(),
+            ifMethod.getMethod().flatName(),
             ifMethod.getReturnType(typeArgs),
             List.<JCTree.JCTypeParameter>nil(),
             args(ifMethod.getParamTypes(typeArgs)),
@@ -64,12 +65,12 @@ public class LambdaTransformer {
             initBlock,
             null);
         return newClass(
-            fn, ifMethod.getClassName(),
+            fn, ifMethod.getClazz(),
             classBody(body, method));
     }
 
-    private JCTree.JCExpression ident(JCTree.JCExpression orig, Name name) {
-        JCTree.JCExpression ident = maker.QualIdent(elems.getTypeElement(name));
+    private JCTree.JCExpression ident(JCTree.JCExpression orig, Symbol nameSymbol) {
+        JCTree.JCExpression ident = maker.Ident(nameSymbol);
         List<JCTree.JCExpression> typeArgs = appliedTypes(orig);
         if (!typeArgs.isEmpty()) return maker.TypeApply(ident, typeArgs);
         return ident;
@@ -98,7 +99,7 @@ public class LambdaTransformer {
         ListBuffer<JCTree.JCVariableDecl> args = new ListBuffer<JCTree.JCVariableDecl>();
         int i = 1;
         for (JCTree.JCExpression paramType : paramTypes) {
-            args.append(arg("_" + i, paramType));
+            args.append(arg("_" + i++, paramType));
         }
         return args.toList();
     }
@@ -113,11 +114,11 @@ public class LambdaTransformer {
             List.<JCTree>of(method));
     }
 
-    private JCTree.JCNewClass newClass(JCTree.JCNewClass orig, Name name, JCTree.JCClassDecl classBody) {
+    private JCTree.JCNewClass newClass(JCTree.JCNewClass orig, Symbol nameSymbol, JCTree.JCClassDecl classBody) {
         return maker.NewClass(
             orig.getEnclosingExpression(),
             orig.getTypeArguments(),
-            ident(orig.getIdentifier(), name),
+            ident(orig.getIdentifier(), nameSymbol),
             orig.getArguments(),
             classBody);
     }
