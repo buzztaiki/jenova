@@ -29,6 +29,7 @@ import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Pair;
@@ -64,9 +65,15 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         for (Element elem : roundEnv.getElementsAnnotatedWith(Jenova.class)) {
             Symbol sym = (Symbol)elem;
-            Attribute.Compound jenovaAttr = findAnnotation(sym, Jenova.class);
-            Attribute.Array lambdas = (Attribute.Array)annotationValue(jenovaAttr, "value");
-            Map<String, InterfaceMethod> ifMethods = ifMethods(lambdas);
+            Map<String, InterfaceMethod> ifMethods;
+            try {
+                Attribute.Compound jenovaAttr = findAnnotation(sym, Jenova.class);
+                Attribute.Array lambdas = (Attribute.Array)annotationValue(jenovaAttr, "value");
+                ifMethods = ifMethods(lambdas);
+            } catch (RuntimeException e) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getMessage(), sym);
+                continue;
+            }
             if (ifMethods.isEmpty()) continue;
 
             final JCTree.JCCompilationUnit unit = toUnit(elem);
@@ -77,7 +84,12 @@ public class AnnotationProcessor extends AbstractProcessor {
             unit.accept(new TreeTranslator() {
                 @Override public void visitNewClass(JCTree.JCNewClass tree) {
                     super.visitNewClass(tree);
-                    result = transformer.transform(tree);
+                    try {
+                        result = transformer.transform(tree);
+                    } catch (RuntimeException e) {
+                        processingEnv.getMessager().printMessage(
+                            Diagnostic.Kind.ERROR, e.getMessage(), TreeInfo.instance(context).symbolFor(tree));
+                    }
                 }
             });
         }
@@ -98,7 +110,13 @@ public class AnnotationProcessor extends AbstractProcessor {
 
     private Attribute annotationValue(Attribute.Compound attr, String name) {
         for (Pair<Symbol.MethodSymbol,Attribute> pair : attr.values) {
-            if (pair.fst.flatName().contentEquals(name)) return pair.snd;
+            if (pair.fst.flatName().contentEquals(name)) {
+                if (pair.snd instanceof Attribute.Error) {
+                    Attribute.Error err = (Attribute.Error) pair.snd;
+                    throw new IllegalArgumentException(err.getValue());
+                }
+                return pair.snd;
+            }
         }
         throw new IllegalArgumentException("Invalid parameter name " + name);
     }
