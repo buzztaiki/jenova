@@ -40,6 +40,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
@@ -48,6 +49,11 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes("com.github.buzztaiki.jenova.Jenova")
 public class AnnotationProcessor extends AbstractProcessor {
     private Context context;
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latest();
+    }
 
     @Override
     public void init(ProcessingEnvironment processingEnv) {
