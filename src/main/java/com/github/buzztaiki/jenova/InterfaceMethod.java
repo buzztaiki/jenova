@@ -81,7 +81,7 @@ public class InterfaceMethod {
                 return types.isSameType(a, b);
             }
             @Override protected int doHash(Type t) {
-                return types.hashCode(t);
+                return Types.hashCode(t);
             }
         };
     }

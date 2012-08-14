@@ -46,7 +46,7 @@ public class LambdaTransformer {
     }
 
     public JCTree.JCNewClass transform(JCTree.JCNewClass fn) {
-        InterfaceMethod ifMethod = ifMethods.get(info.name(fn.getIdentifier()).toString());
+        InterfaceMethod ifMethod = ifMethods.get(TreeInfo.name(fn.getIdentifier()).toString());
         if (ifMethod != null) return transform(fn, ifMethod);
         return fn;
     }

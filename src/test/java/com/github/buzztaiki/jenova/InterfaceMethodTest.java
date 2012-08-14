@@ -138,7 +138,7 @@ public class InterfaceMethodTest {
         List<JCTree.JCExpression> typeArgs = List.of(
             maker.QualIdent(typeElement(Object.class)));
         assertThat(
-            info.types(im.getParamTypes(typeArgs)),
+            TreeInfo.types(im.getParamTypes(typeArgs)),
             contains(
                 sameType(typeElement(Object.class).asType()),
                 sameType(typeElement(Object.class).asType())));
@@ -151,7 +151,7 @@ public class InterfaceMethodTest {
             maker.QualIdent(typeElement(Integer.class)),
             maker.QualIdent(typeElement(String.class)));
         assertThat(
-            info.types(im.getParamTypes(typeArgs)),
+            TreeInfo.types(im.getParamTypes(typeArgs)),
             contains(sameType(typeElement(Integer.class).asType())));
     }
 
@@ -160,7 +160,7 @@ public class InterfaceMethodTest {
     }
 
     private Type type(JCTree tree) {
-        return info.types(List.of(tree)).get(0);
+        return TreeInfo.types(List.of(tree)).get(0);
     }
 
     private <T extends Type> Matcher<T> sameType(final T type) {

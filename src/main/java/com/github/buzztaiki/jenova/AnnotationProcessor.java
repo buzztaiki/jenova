@@ -88,7 +88,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                         result = transformer.transform(tree);
                     } catch (RuntimeException e) {
                         processingEnv.getMessager().printMessage(
-                            Diagnostic.Kind.ERROR, e.getMessage(), TreeInfo.instance(context).symbolFor(tree));
+                            Diagnostic.Kind.ERROR, e.getMessage(), TreeInfo.symbolFor(tree));
                     }
                 }
             });
