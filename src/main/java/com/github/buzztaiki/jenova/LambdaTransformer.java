@@ -105,12 +105,8 @@ public class LambdaTransformer {
     }
 
     private JCTree.JCClassDecl classBody(JCTree.JCClassDecl orig, JCTree.JCMethodDecl method) {
-        return maker.ClassDef(
+        return maker.AnonymousClassDef(
             orig.getModifiers(),
-            orig.getSimpleName(),
-            orig.getTypeParameters(),
-            orig.getExtendsClause(), // TODO: compile failed when java7
-            orig.getImplementsClause(),
             List.<JCTree>of(method));
     }
 
